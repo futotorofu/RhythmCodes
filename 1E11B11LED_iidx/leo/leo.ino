@@ -16,7 +16,7 @@ Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_GAMEPAD, 14, 0,
 boolean hidMode, ttMode, state[1]={false}, set[2]={false};
 int encTT=0, TTold=0;
 unsigned long TTmillis;
-const int GEAR = 24;   //number of gear teeth or ppr of encoder
+const int GEAR = 144;   //number of gear teeth or ppr of encoder
 const int TTdz = 0;     //digital tt deadzone (pulse)
 const int TTdelay = 50;  //digital tt button release delay (millisecond)
 byte EncPins[]    = {0,1};
@@ -66,7 +66,9 @@ void setup() {
   }
 
   //setup interrupts
-  attachInterrupt(digitalPinToInterrupt(EncPins[0]), doEncoder0, CHANGE);
+  //with AC optical sensors you can pick up more inputs with a change interrupt
+  attachInterrupt(digitalPinToInterrupt(EncPins[0]), doEncF0, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(EncPins[1]), doEncF1, CHANGE);
   
   // light and turntable mode detection
   hidMode = digitalRead(ButtonPins[0]);
@@ -106,6 +108,11 @@ void setup() {
   for(int i=0;i<ButtonCount ;i++) {
     digitalWrite(SinglePins[i],LOW);
   }
+  
+  //initialize encoder state so we can judge rise and fall
+  set[0] = digitalRead(EncPins[0]);
+  set[1] = digitalRead(EncPins[1]);
+  
 } //end setup
 
 void loop() {
@@ -128,8 +135,9 @@ void loop() {
   //read encoders
   //analog mode, detect overflow and rollover
   if(ttMode==true) {
-    if(encTT < -GEAR/2 || encTT > GEAR/2-1)
-    encTT = constrain (encTT*-1, -GEAR/2, GEAR/2-1);
+    if(encTT < -GEAR/2 || encTT > GEAR/2-1) {
+		encTT = constrain (encTT*-1, -GEAR/2, GEAR/2-1);
+	}
     Joystick.setXAxis(encTT);
   }
   //digital mode
@@ -161,24 +169,63 @@ void loop() {
   Joystick.sendState();
   delayMicroseconds(ReportDelay);
   //ReportRate Display
-  Serial.print(micros() - ReportRate) ;
-  Serial.println(" micro sec per loop") ;
+  //Serial.print(micros() - ReportRate) ;
+  //Serial.println(" micro sec per loop") ;
 }//end loop
 
 //Interrupts
-void doEncoder0() {
-  if(state[0] == false && digitalRead(EncPins[0]) == LOW) {
-    set[0] = digitalRead(EncPins[1]);
-    state[0] = true;
-  }
-  if(state[0] == true && digitalRead(EncPins[0]) == HIGH) {
-    set[1] = !digitalRead(EncPins[1]);
-    if(set[0] == true && set[1] == true) {
-      encTT++;
-    }
-    if(set[0] == false && set[1] == false) {
-      encTT--;
-    }
-    state[0] = false;
-  }
+void doEncF0() {
+	int prevState = set[0];
+	set[0] = digitalRead(EncPins[0]);
+	
+	if(prevState == 0 && set[0] == 1) { //Encoder 0 Rise
+		if(digitalRead(EncPins[1]) == LOW) { 
+			encTT++;
+		} else {
+			encTT--;
+		}
+		//debugTT(0, true);
+	} else if (prevState == 1 && set[0] == 0) { //Encoder 0 Fall
+		if(digitalRead(EncPins[1]) == HIGH) { 
+			encTT++;
+		} else {
+			encTT--;
+		}
+		//debugTT(0, false);
+	}
+}
+
+
+void doEncF1() {
+	int prevState = set[1];
+	set[1] = digitalRead(EncPins[1]);
+	if(prevState == 0 && set[1] == 1) { //Encoder 1 Fall
+		if(digitalRead(EncPins[0]) == HIGH) { 
+			encTT++;
+		} else {
+			encTT--;
+		}
+		//debugTT(1, false);
+	} else if (prevState == 1 && set[1] == 0) { //Encoder 0 Rise
+		if(digitalRead(EncPins[0]) == LOW) { 
+			encTT++;
+		} else {
+			encTT--;
+		}
+		//debugTT(1, true);
+	}
+}
+
+void debugTT(int enc, int rise) {
+	Serial.print(encTT);
+	if(enc) {
+		Serial.print(" Encoder 1 " );
+	} else { 
+		Serial.print(" Encoder 0 ");
+	}
+	if(rise) {
+		Serial.println(" RISE");
+	} else {
+		Serial.println(" FALL");
+	}
 }
