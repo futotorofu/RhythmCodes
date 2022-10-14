@@ -135,8 +135,8 @@ void loop() {
   //read encoders
   //analog mode, detect overflow and rollover
   if(ttMode==true) {
-    if(encTT < -GEAR/2 || encTT > GEAR/2-1) {
-		encTT = constrain (encTT*-1, -GEAR/2, GEAR/2-1);
+    if(encTT < -128 || encTT > 127) {
+		encTT = constrain (encTT*-1, -128, 127);
 	}
     Joystick.setXAxis(encTT);
   }
