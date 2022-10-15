@@ -51,8 +51,8 @@ unsigned long ReportRate ;
 void setup() {
   Serial.begin(9600) ;
   Joystick.begin(false);
-  Joystick.setXAxisRange(-GEAR/2, GEAR/2-1);
-  Joystick.setYAxisRange(-GEAR/2, GEAR/2-1);
+  Joystick.setXAxisRange(-128, 127);
+  Joystick.setYAxisRange(-128, 127);
   
   // setup I/O for pins
   for(int i=0;i<ButtonCount;i++) {
