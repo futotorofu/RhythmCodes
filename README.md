@@ -1,8 +1,12 @@
 # RhythmCodes
-DIY製作多種音樂遊戲控制器的程式碼,使用Arduino Leonardo
+DIY rhythm game controller firmware targeting Arduino Leonardo.
 
-# Todo list:
-* implement debounce library
-* librarylize HID light code
-* mixed light mode
-* eeprom function to keep user settings
+The firmware found here is mostly tailored to my specific needs.
+
+Originally authored by KnucklesLee.
+# Changelog
+* Catch every IIDX optical sensor input, for turntable designs with a low amount of gear teeth.
+* Implement debounce into SDVX controller code.
+
+# License
+GPLv3

@@ -1,23 +1,31 @@
  /*Arduino SDVX Controller Code for Leonardo
- * 2 Encoders + 10 Buttons + 10 HID controlable LED
+ * 2 Encoders + 10 Buttons + 10 HID controlable LED ?
  * release page
  * http://knuckleslee.blogspot.com/2018/06/RhythmCodes.html
  * 
+ * Debounce support
+ * https://github.com/futotorofu/RhythmCodes
+ * THE PINS ARE CUSTOMIZED FOR MY PERSONAL CONTROLLER'S PINOUT! CHANGE IT ACCORDINGLY!
+ *
+ * Bounce2 (installed from Library Manager)
+ * https://github.com/thomasfredericks/Bounce2
  * Arduino Joystick Library
  * https://github.com/MHeironimus/ArduinoJoystickLibrary/
  * mon's Arduino-HID-Lighting
  * https://github.com/mon/Arduino-HID-Lighting
  */
 #include <Joystick.h>
+#include <Bounce2.h>
 Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_GAMEPAD, 10, 0,
  true, true, false, false, false, false, false, false, false, false, false);
 
 boolean hidMode, state[2]={false}, set[4]={false};
 int encL=0, encR=0;
+const int DEBOUNCE = 5; //debounce time in ms
 const int PULSE = 600;  //number of pulses per revolution of encoders 
 byte EncPins[]    = {0, 1, 2, 3};
-byte SinglePins[] = {4, 6, 8, 10,12,18,20,22,14,16};
-byte ButtonPins[] = {5, 7, 9, 11,13,19,21,23,15,17};
+byte SinglePins[] = {6, 7, 8, 9, 10, 11, 12};
+byte ButtonPins[] = {13, 18, 19, 20, 21, 22, 23};
 unsigned long ReactiveTimeoutMax = 1000;  //number of cycles before HID falls back to reactive
 
 /* pin assignments
@@ -34,13 +42,15 @@ unsigned long ReactiveTimeoutMax = 1000;  //number of cycles before HID falls ba
  *   release = true  = HID lighting with reactive fallback
  */
  
-byte ButtonCount = sizeof(ButtonPins) / sizeof(ButtonPins[0]);
-byte SingleCount = sizeof(SinglePins) / sizeof(SinglePins[0]);
-byte EncPinCount = sizeof(EncPins) / sizeof(EncPins[0]);
+const byte ButtonCount = sizeof(ButtonPins) / sizeof(ButtonPins[0]);
+const byte SingleCount = sizeof(SinglePins) / sizeof(SinglePins[0]);
+const byte EncPinCount = sizeof(EncPins) / sizeof(EncPins[0]);
 unsigned long ReactiveTimeoutCount = ReactiveTimeoutMax;
 
 int ReportDelay = 700;
 unsigned long ReportRate ;
+
+Bounce buttons[ButtonCount];
 
 void setup() {
   Serial.begin(9600);
@@ -50,7 +60,9 @@ void setup() {
   
   // setup I/O for pins
   for(int i=0;i<ButtonCount;i++) {
-    pinMode(ButtonPins[i],INPUT_PULLUP);
+    buttons[i] = Bounce();
+    buttons[i].attach(ButtonPins[i], INPUT_PULLUP);
+    buttons[i].interval(DEBOUNCE);
   }
   for(int i=0;i<SingleCount;i++) {
     pinMode(SinglePins[i],OUTPUT);
@@ -106,7 +118,8 @@ void loop() {
   
   // read buttons
   for(int i=0;i<ButtonCount;i++) {
-    Joystick.setButton (i,!(digitalRead(ButtonPins[i])));
+    buttons[i].update();
+    Joystick.setButton(i, !(buttons[i].read()));
   }
 
   if(hidMode==false || (hidMode==true && ReactiveTimeoutCount>=ReactiveTimeoutMax)){
