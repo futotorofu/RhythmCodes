@@ -16,7 +16,9 @@ unsigned long extern ReactiveTimeoutCount;
 
 void led_stuff(SinglePin pins, byte brightness)
 {
-  analogWrite(pins.pin, brightness);
+  //analogWrite(pins.pin, brightness);
+  //for reasons unknown, SDVX HID lights did not want to work with analogWrite for me on s*tools. 
+  digitalWrite(pins.pin, brightness > 128? HIGH : LOW);
 }
 
 void rgb_stuff(RGBPin pins, byte r, byte g, byte b)

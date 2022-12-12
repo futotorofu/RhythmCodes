@@ -9,8 +9,8 @@
  * 2018 (C) Arduino-HID-Lighting-Library, Knuckleslee
 */
 #include "HID.h"
-
-#define NUMBER_OF_SINGLE 10
+//REMEMBER TO ADJUST THIS IF YOU WANT HID LIGHTS TO WORK
+#define NUMBER_OF_SINGLE 7
 #define NUMBER_OF_RGB 0
 #define NUMBER_OF_LIGHTS (NUMBER_OF_SINGLE + NUMBER_OF_RGB*3)
 extern boolean hidMode;
