@@ -5,8 +5,8 @@ The firmware found here is mostly tailored to my specific needs.
 
 Originally authored by KnucklesLee.
 # Changelog
-* Catch every IIDX optical sensor input, for turntable designs with a low amount of gear teeth. Implement debounce.
-* Implement debounce into SDVX controller code.
+* IIDX, SDVX, Pop'n: Implement debounce support.
+* Add no inputs dropped IIDX encoder logic for designs with a low number of gear teeth.
 
 # License
 GPLv3
